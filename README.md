@@ -1,2 +1,5 @@
-# Bank-Customer-Chrun-Analysis
-Analyzing 10,000 bank customers to identify churn drivers across geography, demographics, and product holdings — with actionable retention recommendations.
+# 🏦 Bank Customer Churn Analysis
+
+> An end-to-end data analysis project investigating customer churn 
+> across 10,000 bank customers using MySQL for analysis and Excel 
+> for interactive visualization.
