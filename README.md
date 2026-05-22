@@ -6,7 +6,8 @@
 
 ## 📊 Dashboard Preview
 
-![Images](Churn_Overview.png)
+!![Dashboard](Images/Churn_Overview.png)
+
 
 ---
 
