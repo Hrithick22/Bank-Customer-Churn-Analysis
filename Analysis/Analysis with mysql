@@ -1,0 +1,242 @@
+/*
+================================================================
+Project   : Bank Customer Churn Analysis
+Author    :Pandiayaraj D
+Database  : MySQL 8.0
+Dataset   : 10,000 bank customers x 18 features
+Objective : Identify churn drivers across geography, demographics,
+            product holdings, and customer behavior to inform
+            customer retention strategy.
+================================================================
+*/
+
+USE bank_churn_analysis;
+
+-- Create a reusable view of the main table
+CREATE VIEW Selecting AS 
+SELECT * FROM customer_churn_table;
+
+
+-- ================================================================
+-- SECTION 1: BASIC EXPLORATION
+-- ================================================================
+
+-- Q1: Total number of customers in the dataset
+SELECT COUNT(*) AS total_customers 
+FROM customer_churn_table;
+
+
+-- Q2: How many customers churned vs not churned?
+SELECT 
+    Exited AS churn_flag,
+    COUNT(*) AS customer_count 
+FROM customer_churn_table
+GROUP BY Exited;
+
+
+-- Q3: What is the average credit score of all customers?
+SELECT AVG(CreditScore) AS avg_credit_score 
+FROM customer_churn_table;
+
+
+-- Q4: Number of customers from each country
+SELECT 
+    Geography,
+    COUNT(*) AS customer_count 
+FROM customer_churn_table
+GROUP BY Geography;
+
+
+-- Q5: Number of male vs female customers
+SELECT 
+    Gender,
+    COUNT(*) AS customer_count 
+FROM customer_churn_table
+GROUP BY Gender;
+
+
+-- Q6: How many customers have zero account balance?
+SELECT COUNT(*) AS zero_balance_customers
+FROM customer_churn_table
+WHERE Balance = 0;
+
+
+-- Q7: Average balance of churned customers
+SELECT ROUND(AVG(Balance), 2) AS avg_balance_churned 
+FROM customer_churn_table
+WHERE Exited = 1;
+
+
+-- Q8: Average tenure of non-churned customers
+SELECT ROUND(AVG(Tenure), 2) AS avg_tenure_retained 
+FROM customer_churn_table
+WHERE Exited = 0;
+
+
+-- Q9: Number of active members with more than 2 products
+SELECT COUNT(*) AS active_members_high_products 
+FROM customer_churn_table
+WHERE NumOfProducts > 2 AND IsActiveMember = 1;
+
+
+-- Q10: Average balance comparison between active and inactive customers
+SELECT 
+    IsActiveMember AS activity_status,
+    ROUND(AVG(Balance), 2) AS avg_balance 
+FROM customer_churn_table
+GROUP BY IsActiveMember;
+
+
+-- Q11: Average estimated salary by gender
+SELECT 
+    Gender,
+    ROUND(AVG(EstimatedSalary), 2) AS avg_estimated_salary 
+FROM customer_churn_table
+GROUP BY Gender;
+
+
+-- ================================================================
+-- SECTION 2: SEGMENTATION & CHURN RATE ANALYSIS
+-- ================================================================
+
+-- Q12: Which country has the highest churn rate?
+SELECT 
+    Geography,
+    COUNT(*) AS total_customers,
+    SUM(Exited) AS churned_customers,
+    ROUND(AVG(Exited) * 100, 2) AS churn_rate_percent
+FROM customer_churn_table
+GROUP BY Geography
+ORDER BY churn_rate_percent DESC;
+
+
+-- Q13: Top 5 customers with highest estimated salary who churned
+SELECT 
+    Surname, 
+    Geography, 
+    Age, 
+    EstimatedSalary 
+FROM customer_churn_table
+WHERE Exited = 1
+ORDER BY EstimatedSalary DESC 
+LIMIT 5;
+
+
+-- Q14: Churn rate per tenure year
+SELECT 
+    Tenure,
+    COUNT(*) AS total_customers,
+    SUM(Exited) AS churned_customers,
+    ROUND(AVG(Exited) * 100, 2) AS churn_rate_percent
+FROM customer_churn_table
+GROUP BY Tenure
+ORDER BY Tenure;
+
+
+-- Q15: Churn rate by number of products held
+SELECT 
+    NumOfProducts,
+    COUNT(*) AS total_customers,
+    SUM(CASE WHEN Exited = 1 THEN 1 ELSE 0 END) AS churned_customers,
+    ROUND(
+        SUM(CASE WHEN Exited = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 
+        2
+    ) AS churn_rate_percent
+FROM customer_churn_table
+GROUP BY NumOfProducts
+ORDER BY NumOfProducts;
+
+
+-- Q16: Churn rate segmented by age groups
+SELECT 
+    CASE 
+        WHEN Age BETWEEN 18 AND 30 THEN '18-30'
+        WHEN Age BETWEEN 31 AND 45 THEN '31-45'
+        WHEN Age BETWEEN 46 AND 60 THEN '46-60'
+        WHEN Age > 60 THEN '60+'
+    END AS age_group,
+    COUNT(*) AS total_customers,
+    SUM(Exited) AS churned_customers,
+    ROUND(AVG(Exited) * 100, 2) AS churn_rate_percent
+FROM customer_churn_table
+GROUP BY age_group
+ORDER BY age_group;
+
+
+-- Q17: Churn rate by Geography and Gender combinations
+SELECT 
+    Geography,
+    Gender,
+    COUNT(*) AS total_customers,
+    SUM(Exited) AS churned_customers,
+    ROUND(AVG(Exited) * 100, 2) AS churn_rate_percent
+FROM customer_churn_table
+GROUP BY Geography, Gender
+ORDER BY churn_rate_percent DESC;
+
+
+-- Q18: Average credit score and balance for churned customers per country
+SELECT 
+    Geography,
+    ROUND(AVG(CreditScore)) AS avg_credit_score,
+    ROUND(AVG(Balance), 2) AS avg_balance,
+    COUNT(*) AS churned_customer_count 
+FROM customer_churn_table
+WHERE Exited = 1
+GROUP BY Geography;
+
+
+-- ================================================================
+-- SECTION 3: ADVANCED ANALYSIS (Subqueries, HAVING, Risk Profiling)
+-- ================================================================
+
+-- Q19: Top 10 most at-risk profiles - highest balance customers who churned
+SELECT 
+   *
+FROM customer_churn_table
+WHERE Exited = 1
+ORDER BY Balance DESC
+LIMIT 10;
+
+
+-- Q20: Churn rate among customers with no credit card
+SELECT 
+    COUNT(*) AS total_no_credit_card,
+    SUM(Exited) AS churned_customers,
+    ROUND(SUM(Exited) * 100.0 / COUNT(*), 2) AS churn_rate_percent 
+FROM customer_churn_table
+WHERE HasCrCard = 0;
+
+
+-- Q21: Customers with balance higher than the average balance of churned customers
+SELECT 
+    Surname,
+    Geography,
+    Balance,
+    Exited
+FROM customer_churn_table
+WHERE Balance > (
+    SELECT AVG(Balance) 
+    FROM customer_churn_table 
+    WHERE Exited = 1
+)
+ORDER BY Balance DESC;
+
+
+-- Q22: Countries with churn rate higher than the overall average churn rate
+SELECT 
+    Geography,
+    COUNT(*) AS total_customers,
+    SUM(Exited) AS churned_customers,
+    ROUND(AVG(Exited) * 100, 2) AS country_churn_rate
+FROM customer_churn_table
+GROUP BY Geography
+HAVING AVG(Exited) > (
+    SELECT AVG(Exited) FROM customer_churn_table
+)
+ORDER BY country_churn_rate DESC;
+
+
+-- ================================================================
+-- END OF ANALYSIS
+-- ================================================================
