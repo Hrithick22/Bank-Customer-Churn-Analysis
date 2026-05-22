@@ -6,7 +6,11 @@
 
 ## 📊 Dashboard Preview
 
-!![Dashboard](Images/Churn_Overview.png)
+![Dashboard](Images/Churn_Overview.png)
+![Dashboard](Images/Country Breakdown.png)
+![Dashboard](Images/Gender_Breakdown.png)
+![Dashboard](Images/Membership_Breakdown.png)
+
 
 
 ---
