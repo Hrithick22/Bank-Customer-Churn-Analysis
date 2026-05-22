@@ -70,7 +70,7 @@ The SQL portion answers 22 business questions across 3 complexity tiers:
 - **Visualizations:** Churn by country, product holdings, age, activity status
 - **Dynamic Filters:** All charts respond to slicer selections
 
-📂 [Download dashboard file](dashboard/Customer_Churn_Dashboard.xlsx)
+📂 [Download dashboard file](dashboard/Customer_Churn_Analysis.xlsx)
 
 ---
 
